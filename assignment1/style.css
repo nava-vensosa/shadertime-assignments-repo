@@ -1,0 +1,41 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #808080;
+}
+
+canvas {
+  display: block;
+}
+
+.btn {
+  position: absolute;
+  padding: 8px 18px;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  background: #cc2222;
+  transition: background 0.3s ease;
+  z-index: 10;
+  user-select: none;
+}
+
+.btn:hover {
+  filter: brightness(1.2);
+}
+
+.btn.flash {
+  background: #2255ee !important;
+}
+
+.btn:disabled {
+  background: #666 !important;
+  cursor: not-allowed;
+  border-color: #999;
+  color: #999;
+}
