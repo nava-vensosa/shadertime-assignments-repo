@@ -1,0 +1,440 @@
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow: hidden;
+  background: #0a0a1a;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #e0e0e0;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none;
+}
+
+/* Glassmorphic Panel */
+#panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: rgba(15, 15, 35, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 100;
+}
+
+#panel.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(20px);
+}
+
+#panel-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #fff;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+#panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-row label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.field-row input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.field-row input:focus {
+  border-color: rgba(100, 150, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+button {
+  background: rgba(100, 150, 255, 0.2);
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: #a0c4ff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+
+button:hover {
+  background: rgba(100, 150, 255, 0.35);
+  border-color: rgba(100, 150, 255, 0.5);
+  color: #fff;
+}
+
+button.danger {
+  background: rgba(255, 80, 80, 0.2);
+  border-color: rgba(255, 80, 80, 0.3);
+  color: #ff8080;
+}
+
+button.danger:hover {
+  background: rgba(255, 80, 80, 0.35);
+  border-color: rgba(255, 80, 80, 0.5);
+  color: #fff;
+}
+
+button.back-btn {
+  margin-top: 12px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+button.back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.child-list {
+  margin-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 12px;
+}
+
+.child-list h4 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 8px;
+}
+
+.child-item {
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.child-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* Hint text */
+#hint {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+  z-index: 100;
+  white-space: nowrap;
+}
+
+/* Scrollbar styling */
+#panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+#panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+/* Sample Picker */
+.sample-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.sample-input-wrap input {
+  flex: 1;
+  border-radius: 8px 0 0 8px;
+}
+
+.sample-folder-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: auto;
+  padding: 8px 0;
+  min-height: auto;
+  border-radius: 0 8px 8px 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: none;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sample-folder-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.sample-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  min-width: 140px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: rgba(20, 20, 45, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  z-index: 200;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.sample-dropdown.hidden {
+  display: none;
+}
+
+.sample-option {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.sample-option:hover {
+  background: rgba(100, 150, 255, 0.2);
+  color: #fff;
+}
+
+/* Audio Toggle */
+.audio-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.audio-toggle-row > label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.audio-toggle {
+  padding: 6px 18px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(255, 80, 80, 0.15);
+  border: 1px solid rgba(255, 80, 80, 0.3);
+  color: #ff6666;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: auto;
+}
+
+.audio-toggle.active {
+  background: rgba(80, 220, 100, 0.2);
+  border-color: rgba(80, 220, 100, 0.4);
+  color: #50dc64;
+}
+
+.audio-toggle:hover {
+  opacity: 0.85;
+}
+
+/* Tick Toggle Section */
+.tick-section {
+  margin-top: 8px;
+}
+
+.tick-section > label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 6px;
+}
+
+.tick-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tick-toggle {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(85, 85, 85, 0.3);
+  border: 1px solid rgba(85, 85, 85, 0.5);
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: auto;
+}
+
+.tick-toggle.active {
+  background: rgba(68, 136, 255, 0.25);
+  border-color: rgba(68, 136, 255, 0.5);
+  color: #4488ff;
+}
+
+.tick-toggle:hover {
+  background: rgba(68, 136, 255, 0.15);
+  border-color: rgba(68, 136, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.tick-toggle.active:hover {
+  background: rgba(68, 136, 255, 0.35);
+  color: #fff;
+}
+
+/* ========== Mobile / Touch Responsive ========== */
+@media (max-width: 768px) {
+  #panel {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 45vh;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 16px;
+  }
+
+  #panel.hidden {
+    transform: translateY(20px);
+  }
+
+  #panel-title {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .field-row label {
+    font-size: 0.8rem;
+  }
+
+  .field-row input {
+    padding: 12px 14px;
+    font-size: 1rem;
+    border-radius: 10px;
+  }
+
+  button {
+    padding: 12px 18px;
+    font-size: 0.9rem;
+    min-height: 44px;
+  }
+
+  .child-item {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+
+  .actions {
+    gap: 10px;
+  }
+
+  .tick-toggle {
+    width: 38px;
+    height: 38px;
+    font-size: 0.8rem;
+    min-height: 38px;
+  }
+
+  #hint {
+    bottom: auto;
+    top: 12px;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 400px) {
+  #panel {
+    padding: 16px 12px;
+    max-height: 50vh;
+  }
+
+  .field-row input {
+    padding: 10px 12px;
+  }
+
+  button {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    flex: 1 1 auto;
+  }
+}
