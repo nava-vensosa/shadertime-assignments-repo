@@ -63,7 +63,7 @@ export default class CameraController {
   }
 
   _onMouseDown(e) {
-    if (e.button === 2) { // right-click
+    if (e.button === 0) { // left-click
       this._isDragging = true;
       this._prevMouse.x = e.clientX;
       this._prevMouse.y = e.clientY;
@@ -76,7 +76,7 @@ export default class CameraController {
     const dx = e.clientX - this._prevMouse.x;
     const dy = e.clientY - this._prevMouse.y;
 
-    this.targetTheta -= dx * this._rotateSpeed;
+    this.targetTheta += dx * this._rotateSpeed;
     this.targetPhi = THREE.MathUtils.clamp(
       this.targetPhi - dy * this._rotateSpeed,
       this.minPhi,
@@ -88,7 +88,7 @@ export default class CameraController {
   }
 
   _onMouseUp(e) {
-    if (e.button === 2) {
+    if (e.button === 0) {
       this._isDragging = false;
     }
   }
@@ -136,7 +136,7 @@ export default class CameraController {
       const dx = e.touches[0].clientX - this._prevMouse.x;
       const dy = e.touches[0].clientY - this._prevMouse.y;
 
-      this.targetTheta -= dx * this._rotateSpeed;
+      this.targetTheta += dx * this._rotateSpeed;
       this.targetPhi = THREE.MathUtils.clamp(
         this.targetPhi - dy * this._rotateSpeed,
         this.minPhi,
