@@ -238,8 +238,8 @@ button.back-btn:hover {
   top: 100%;
   right: 0;
   margin-top: 4px;
-  min-width: 140px;
-  max-height: 240px;
+  min-width: 180px;
+  max-height: 300px;
   overflow-y: auto;
   background: rgba(20, 20, 45, 0.95);
   backdrop-filter: blur(12px);
@@ -254,10 +254,42 @@ button.back-btn:hover {
   display: none;
 }
 
-.sample-option {
+.sample-machine-header {
   padding: 8px 14px;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: background 0.12s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sample-machine-header:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sample-arrow {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.4);
+  width: 10px;
+  display: inline-block;
+}
+
+.sample-machine-items {
+  display: none;
+}
+
+.sample-machine-items.expanded {
+  display: block;
+}
+
+.sample-option {
+  padding: 6px 14px 6px 30px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
 }

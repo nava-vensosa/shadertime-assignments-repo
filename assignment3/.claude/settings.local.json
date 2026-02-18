@@ -7,7 +7,14 @@
       "Bash(node --check src/Sun.js)",
       "Bash(lsof -i :8776)",
       "Bash(python3 -m http.server 8776)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(ffprobe:*)",
+      "Bash(soxi:*)",
+      "Bash(python3:*)",
+      "Bash(done)",
+      "Bash(ffmpeg:*)",
+      "Bash(ls:*)",
+      "WebFetch(domain:cdn.jsdelivr.net)"
     ]
   }
 }

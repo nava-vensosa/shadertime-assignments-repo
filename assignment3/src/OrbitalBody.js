@@ -196,39 +196,45 @@ export default class OrbitalBody extends CelestialBody {
   update(dt, elapsed) {
     const omega = angularVelocity(this.clockrate, this.multiplier);
     const period = (2 * Math.PI) / omega;
-    this.arcFraction = (this.arcFraction + dt / period) % 1.0;
+    const prevFrac = this.arcFraction;
+    const step = dt / period;
+    this.arcFraction = (this.arcFraction + step) % 1.0;
 
     const theta = thetaAtArcFraction(this._arcTable, this.arcFraction);
     const pos = ellipsePosition(this.orbitRadius, this.extrema, this.rotation, theta);
     this.anchor.position.copy(pos);
 
+    // Adaptive flash threshold so ticks flash visibly at any frame rate
+    const flashThreshold = Math.max(FLASH_THRESHOLD, step * 0.6);
+
     // Flash and trigger tick marks
-    let anyFlashing = false;
     for (const tick of this.tickMarks) {
       if (!tick.enabled) {
         tick.material.color.setHex(TICK_GREY);
         continue;
       }
 
+      // Visual flash: proximity-based with adaptive threshold
       let diff = Math.abs(this.arcFraction - tick.fraction);
       if (diff > 0.5) diff = 1.0 - diff;
 
-      if (diff < FLASH_THRESHOLD) {
+      if (diff < flashThreshold) {
         tick.material.color.setHex(TICK_RED);
-        anyFlashing = true;
-
-        // Trigger audio only once per tick crossing
-        if (this._lastTriggeredIndex !== tick.index) {
-          this._lastTriggeredIndex = tick.index;
-          if (this._onTickTrigger) this._onTickTrigger(tick.index);
-        }
       } else {
         tick.material.color.setHex(TICK_BLUE);
       }
-    }
 
-    if (!anyFlashing) {
-      this._lastTriggeredIndex = -1;
+      // Audio trigger: crossing detection (frame-rate independent)
+      // Check if tick.fraction fell between prevFrac and arcFraction
+      if (step > 0 && step < 0.5) {
+        const f = tick.fraction;
+        const crossed = (this.arcFraction >= prevFrac)
+          ? (f > prevFrac && f <= this.arcFraction)   // normal
+          : (f > prevFrac || f <= this.arcFraction);   // wrap-around
+        if (crossed && this._onTickTrigger) {
+          this._onTickTrigger(tick.index);
+        }
+      }
     }
 
     // Update trail

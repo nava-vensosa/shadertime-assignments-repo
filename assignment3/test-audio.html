@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio Test</title>
+<style>
+  body { font-family: system-ui; background: #111; color: #eee; padding: 20px; }
+  button { padding: 16px 24px; font-size: 18px; margin: 8px; border-radius: 8px; border: 1px solid #555; background: #333; color: #fff; cursor: pointer; }
+  button:active { background: #555; }
+  #log { margin-top: 20px; font-family: monospace; font-size: 14px; white-space: pre-wrap; color: #8f8; max-height: 60vh; overflow-y: auto; }
+</style>
+</head>
+<body>
+<h2>Mobile Audio Test</h2>
+<p>Tap any button to test. Check the log below.</p>
+<button id="btn-unlock">1. Unlock AudioContext</button><br>
+<button id="btn-load">2. Load HR-16 Kick</button><br>
+<button id="btn-play">3. Play HR-16 Kick</button><br>
+<button id="btn-synth">4. Play Synth Kick</button><br>
+<button id="btn-all">Do All (unlock + load + play)</button>
+<div id="log"></div>
+
+<script>
+const log = document.getElementById('log');
+function L(msg) {
+  const line = new Date().toISOString().slice(11,19) + ' ' + msg;
+  log.textContent += line + '\n';
+  log.scrollTop = log.scrollHeight;
+  console.log(msg);
+}
+
+let ctx = null;
+let kickBuffer = null;
+
+document.getElementById('btn-unlock').addEventListener('click', () => {
+  try {
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      L('AudioContext created, state=' + ctx.state + ', sampleRate=' + ctx.sampleRate);
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => L('resume() resolved, state=' + ctx.state));
+      L('resume() called, state=' + ctx.state);
+    } else {
+      L('Context already state=' + ctx.state);
+    }
+    // Silent buffer trick
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    L('Silent buffer played');
+  } catch(e) {
+    L('ERROR unlock: ' + e.message);
+  }
+});
+
+document.getElementById('btn-load').addEventListener('click', async () => {
+  if (!ctx) { L('No context yet — click Unlock first'); return; }
+  try {
+    L('Fetching samples/HR-16/kick.wav...');
+    const resp = await fetch('samples/HR-16/kick.wav');
+    L('Fetch status=' + resp.status + ', content-type=' + resp.headers.get('content-type'));
+    const arrayBuf = await resp.arrayBuffer();
+    L('ArrayBuffer size=' + arrayBuf.byteLength);
+    kickBuffer = await ctx.decodeAudioData(arrayBuf);
+    L('Decoded: channels=' + kickBuffer.numberOfChannels + ', length=' + kickBuffer.length + ', sampleRate=' + kickBuffer.sampleRate + ', duration=' + kickBuffer.duration.toFixed(3) + 's');
+  } catch(e) {
+    L('ERROR load: ' + e.message);
+  }
+});
+
+document.getElementById('btn-play').addEventListener('click', () => {
+  if (!ctx) { L('No context'); return; }
+  if (!kickBuffer) { L('No buffer loaded'); return; }
+  try {
+    L('Context state=' + ctx.state);
+    const src = ctx.createBufferSource();
+    src.buffer = kickBuffer;
+    src.connect(ctx.destination);
+    src.start();
+    L('BufferSource started');
+  } catch(e) {
+    L('ERROR play: ' + e.message);
+  }
+});
+
+document.getElementById('btn-synth').addEventListener('click', () => {
+  if (!ctx) {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    L('Created context from synth click, state=' + ctx.state);
+    ctx.resume();
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const s = ctx.createBufferSource(); s.buffer = buf; s.connect(ctx.destination); s.start(0);
+  }
+  try {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.frequency.setValueAtTime(160, t);
+    osc.frequency.exponentialRampToValueAtTime(28, t + 0.1);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(1.0, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.5);
+    L('Synth kick playing, ctx.state=' + ctx.state);
+  } catch(e) {
+    L('ERROR synth: ' + e.message);
+  }
+});
+
+document.getElementById('btn-all').addEventListener('click', async () => {
+  try {
+    // Unlock
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    const silBuf = ctx.createBuffer(1, 1, 22050);
+    const silSrc = ctx.createBufferSource(); silSrc.buffer = silBuf; silSrc.connect(ctx.destination); silSrc.start(0);
+    L('Unlocked, state=' + ctx.state);
+
+    // Load
+    const resp = await fetch('samples/HR-16/kick.wav');
+    const ab = await resp.arrayBuffer();
+    kickBuffer = await ctx.decodeAudioData(ab);
+    L('Loaded kick (' + kickBuffer.duration.toFixed(3) + 's)');
+
+    // Play
+    const src = ctx.createBufferSource();
+    src.buffer = kickBuffer;
+    src.connect(ctx.destination);
+    src.start();
+    L('Playing! state=' + ctx.state);
+  } catch(e) {
+    L('ERROR: ' + e.message);
+  }
+});
+
+L('Page loaded. Tap a button to test.');
+L('UserAgent: ' + navigator.userAgent.slice(0, 100));
+</script>
+</body>
+</html>

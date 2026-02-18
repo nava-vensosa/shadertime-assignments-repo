@@ -8,6 +8,22 @@ const engine = new Engine(canvas);
 const systemManager = new SystemManager();
 const audioEngine = new AudioEngine();
 
+// Mobile audio fix: resume AudioContext on every user gesture.
+// Persistent (not one-shot) so it can re-resume after mobile browsers
+// suspend the context during silence gaps between drum hits.
+let audioInitDone = false;
+function handleAudioGesture() {
+  if (!audioInitDone) {
+    audioInitDone = true;
+    audioEngine.init();
+  }
+  if (audioEngine.ctx && audioEngine.ctx.state === 'suspended') {
+    audioEngine.ctx.resume();
+  }
+}
+document.addEventListener('click', handleAudioGesture);
+document.addEventListener('touchend', handleAudioGesture);
+
 // UI elements
 const panelTitle = document.getElementById('panel-title');
 const panelContent = document.getElementById('panel-content');
@@ -127,20 +143,38 @@ function createSampleField(body) {
   const dropdown = document.createElement('div');
   dropdown.className = 'sample-dropdown hidden';
 
+  // Build nested machine folders
   for (const kitName in SAMPLE_CATALOG) {
+    const machineHeader = document.createElement('div');
+    machineHeader.className = 'sample-machine-header';
+    machineHeader.innerHTML = `<span class="sample-arrow">&#9654;</span> ${kitName}`;
+
+    const machineItems = document.createElement('div');
+    machineItems.className = 'sample-machine-items';
+
     for (const sampleKey in SAMPLE_CATALOG[kitName]) {
       const fullPath = `${kitName}/${sampleKey}`;
       const option = document.createElement('div');
       option.className = 'sample-option';
-      option.textContent = fullPath;
-      option.addEventListener('click', () => {
+      option.textContent = sampleKey;
+      option.addEventListener('click', (e) => {
+        e.stopPropagation();
         input.value = fullPath;
         body.sampleName = fullPath;
         wireAudio(body);
         dropdown.classList.add('hidden');
       });
-      dropdown.appendChild(option);
+      machineItems.appendChild(option);
     }
+
+    machineHeader.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const expanded = machineItems.classList.toggle('expanded');
+      machineHeader.querySelector('.sample-arrow').innerHTML = expanded ? '&#9660;' : '&#9654;';
+    });
+
+    dropdown.appendChild(machineHeader);
+    dropdown.appendChild(machineItems);
   }
 
   folderBtn.addEventListener('click', (e) => {
@@ -151,7 +185,6 @@ function createSampleField(body) {
   // Close dropdown when clicking outside
   const closeDropdown = () => dropdown.classList.add('hidden');
   document.addEventListener('click', closeDropdown, { once: false });
-  // Clean up when panel rebuilds — relies on DOM removal stopping events naturally
 
   inputWrap.appendChild(folderBtn);
   inputWrap.appendChild(dropdown);
@@ -187,10 +220,10 @@ function buildSunPanel(sunBody) {
   audioBtn.className = 'audio-toggle' + (audioEngine.muted ? '' : ' active');
   audioBtn.textContent = audioEngine.muted ? 'Off' : 'On';
   audioBtn.addEventListener('click', () => {
-    audioEngine.muted = !audioEngine.muted;
-    if (!audioEngine.muted) audioEngine._ensureContext();
-    audioBtn.classList.toggle('active', !audioEngine.muted);
-    audioBtn.textContent = audioEngine.muted ? 'Off' : 'On';
+    const nowMuted = !audioEngine.muted;
+    audioEngine.setMuted(nowMuted);
+    audioBtn.classList.toggle('active', !nowMuted);
+    audioBtn.textContent = nowMuted ? 'Off' : 'On';
   });
   audioRow.appendChild(audioBtn);
   frag.appendChild(audioRow);
@@ -367,7 +400,7 @@ function buildOrbitalPanel(body) {
 
   // Back to parent
   if (body.parent) {
-    const back = createButton(`← ${body.parent.name}`, () => {
+    const back = createButton(`\u2190 ${body.parent.name}`, () => {
       engine.selectedBody = body.parent;
       showPanel(body.parent);
     });
